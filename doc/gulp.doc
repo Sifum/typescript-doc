@@ -1,0 +1,332 @@
+Gulp
+我们将快速指导你使用gulp来搭建typescript，然后将Browserify, uglify, or Watchify加到gulp流中。本手册也利用Babelify增加Babel功能。
+前提是你已经装了node
+让我们使用如下命令创建proj目录：
+mkdir proj
+cd proj
+
+
+并创建如下目录结构：
+
+proj/
+   ├─ src/
+   └─ dist/
+
+TypeScript文件将保存再src中，然后运行编译器后，生成到dist中
+
+让我们开始架构吧：
+
+创建目录
+mkdir src
+mkdir dist
+
+现在我们使用下面的命令初始化npm包：
+npm init
+
+在初始化中，会出现许多选项让你填写，你可以先使用默认的，除了使用“./dist/main.js”作为入口文件，因为之后你能随时通过修改package.json文件进行调整。
+
+下一步是创建依赖：
+使用npm install创建依赖包，首先用如下命令全局安装TypeScript和gulp（linux下需要sudo）
+
+npm install -g gulp-cli
+
+然后将typescript, gulp and gulp-typescript安装进dev开发依赖。Gulp-typescript是一个gulp插件用于处理Typescript。
+
+npm install --save-dev typescript gulp gulp-typescript
+
+我们现在就开始写一个例子。
+在src中，创建main.ts文件，内容如下:
+function hello(compiler: string) {
+    console.log(`Hello from ${compiler}`);
+}
+hello("TypeScript");
+
+在项目根目录下，创建 tsconfig.json配置文件,内容如下：
+{
+    "files": [
+        "src/main.ts"
+    ],
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "target": "es5"
+    }
+}
+
+然后我们再根目录下创建gulpfile.js配置文件，内容如下：
+var gulp = require("gulp");
+var ts = require("gulp-typescript");
+var tsProject = ts.createProject("tsconfig.json");
+
+gulp.task("default", function () {
+    return tsProject.src()
+        .pipe(tsProject())
+        .js.pipe(gulp.dest("dist"));
+});
+
+命令行输入如下，进行测试，第一行执行gulp任务，第二行查看main.js文件输出：
+gulp
+node dist/main.js
+
+控制台将会输出 “Hello from TypeScript!”.
+
+我们接下来将要增加模块。
+再我们添加Browserify模块前，我们先把项目写得更像个小应用把
+
+创建一个文件，src/greet.ts，内容如下:
+export function sayHello(name: string) {
+    return `Hello from ${name}`;
+}
+改变src/main.ts文件，让其引入src/greet.ts中的sayHello方法，内容如下：
+import { sayHello } from "./greet";
+
+console.log(sayHello("TypeScript"));
+
+最后，增加src/greet.ts到tsconfig.json文件中，如下所示：
+
+{
+    "files": [
+        "src/main.ts",
+        "src/greet.ts"
+    ],
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "target": "es5"
+    }
+}
+
+现在就可以运行如下命令了：
+gulp
+node dist/main.js
+
+使用Browserify让我们再浏览器显示数据，因此我们将合并所有模块进如一个Javascript文件中，Browserify正是做这些事情的。
+首先，创建install browserify, tsify, and vinyl-source-stream。
+tsify是一个Browserify插件，像gulp-typescript一样为了方便使用TypeScript编译器一样。
+vinyl-source-stream lets us adapt the file output of Browserify back into a format that gulp understands called vinyl.
+npm install --save-dev browserify tsify vinyl-source-stream
+
+
+接下来我们练习创建一个页面
+
+在src中创建index.html文件， 如下:
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Hello World!</title>
+    </head>
+    <body>
+        <p id="greeting">Loading ...</p>
+        <script src="bundle.js"></script>
+    </body>
+</html>
+
+
+更改main.ts去更新页面内容:
+
+import { sayHello } from "./greet";
+
+function showHello(divName: string, name: string) {
+    const elt = document.getElementById(divName);
+    elt.innerText = sayHello(name);
+}
+
+showHello("greeting", "TypeScript");
+
+
+调用showHello方法来调用sayHello方法来改变文本内容，gulpfile文件修改如下：
+
+var gulp = require("gulp");
+var browserify = require("browserify");
+var source = require('vinyl-source-stream');
+var tsify = require("tsify");
+var paths = {
+    pages: ['src/*.html']
+};
+
+gulp.task("copy-html", function () {
+    return gulp.src(paths.pages)
+        .pipe(gulp.dest("dist"));
+});
+
+gulp.task("default", ["copy-html"], function () {
+    return browserify({
+        basedir: '.',
+        debug: true,
+        entries: ['src/main.ts'],
+        cache: {},
+        packageCache: {}
+    })
+    .plugin(tsify)
+    .bundle()
+    .pipe(source('bundle.js'))
+    .pipe(gulp.dest("dist"));
+});
+
+文件中增加了copy-html任务，在默认任务中即调用。在默认任务中使用tsify插件调用Browserify来代替gulp-typescript。
+调用合并方法bundle后，我们使用source（vinyl-source-stream的别名）来命名合并文件名为bundle.js
+测试使用：
+gulp
+然后用浏览器打开dist/index.html文件，可以看出显示 “Hello from TypeScript” 
+
+注意：browserify方法中的debug: true属性，使得tsify将在合并的js文件中注入source map，Source map使你能够在浏览器端，选择原始的Typescript文件，然后添加断点，刷新，查看方式来调试js。
+
+接下来介绍Watchify, Babel, and Uglify三个插件
+Watchify开启gulp，并保持运行，之后无论何时你更新文件，都会引起重新编译生成，这将让你的应用能edit-save-refresh。
+Babel能让你定制化或扩展TypeScript不支持的变化。
+Uglify压缩代码。
+
+
+接下来就让我们开始使用Watchify，安装Watchify：
+npm install --save-dev watchify gulp-util
+
+按如下内容更改gulpfile文件:
+var gulp = require("gulp");
+var browserify = require("browserify");
+var source = require('vinyl-source-stream');
+var watchify = require("watchify");
+var tsify = require("tsify");
+var gutil = require("gulp-util");
+var paths = {
+    pages: ['src/*.html']
+};
+
+var watchedBrowserify = watchify(browserify({
+    basedir: '.',
+    debug: true,
+    entries: ['src/main.ts'],
+    cache: {},
+    packageCache: {}
+}).plugin(tsify));
+
+gulp.task("copy-html", function () {
+    return gulp.src(paths.pages)
+        .pipe(gulp.dest("dist"));
+});
+
+function bundle() {
+    return watchedBrowserify
+        .bundle()
+        .pipe(source('bundle.js'))
+        .pipe(gulp.dest("dist"));
+}
+
+gulp.task("default", ["copy-html"], bundle);
+watchedBrowserify.on("update", bundle);
+watchedBrowserify.on("log", gutil.log);
+
+我们进行了三处修改：
+1.watchify包裹了browserify方法
+2.watchedBrowserify.on("update", bundle)：将在你每次修改TypeScript文件时执行bundle任务
+3.watchedBrowserify.on("log", gutil.log)：记录到控制台
+
+运行gulp，修改ts文件，然后保存，你将看到更新信息如（2808 bytes written）：
+proj$ gulp
+[10:34:20] Using gulpfile ~/src/proj/gulpfile.js
+[10:34:20] Starting 'copy-html'...
+[10:34:20] Finished 'copy-html' after 26 ms
+[10:34:20] Starting 'default'...
+[10:34:21] 2824 bytes written (0.13 seconds)
+[10:34:21] Finished 'default' after 1.36 s
+[10:35:22] 2261 bytes written (0.02 seconds)
+[10:35:24] 2808 bytes written (0.05 seconds)
+
+
+接下来使用Uglify：
+安装Uglify，我们需要再安装vinyl-buffer和gulp-sourcemaps使其得以正确运行.
+npm install --save-dev gulp-uglify vinyl-buffer gulp-sourcemaps
+
+修改gulpfile文件如下：
+var gulp = require("gulp");
+var browserify = require("browserify");
+var source = require('vinyl-source-stream');
+var tsify = require("tsify");
+var uglify = require('gulp-uglify');
+var sourcemaps = require('gulp-sourcemaps');
+var buffer = require('vinyl-buffer');
+var paths = {
+    pages: ['src/*.html']
+};
+
+gulp.task("copy-html", function () {
+    return gulp.src(paths.pages)
+        .pipe(gulp.dest("dist"));
+});
+
+gulp.task("default", ["copy-html"], function () {
+    return browserify({
+        basedir: '.',
+        debug: true,
+        entries: ['src/main.ts'],
+        cache: {},
+        packageCache: {}
+    })
+    .plugin(tsify)
+    .bundle()
+    .pipe(source('bundle.js'))
+    .pipe(buffer())
+    .pipe(sourcemaps.init({loadMaps: true}))
+    .pipe(uglify())
+    .pipe(sourcemaps.write('./'))
+    .pipe(gulp.dest("dist"));
+});
+
+注意：uglify只有一次调用，buffer和sourcemaps方法的调用，使得会生成一个专门的source map文件，而不是内联到js文件中。
+
+运行命令如下：
+gulp
+cat dist/bundle.js
+
+
+接下来我们使用Babel
+像Uglify一样，Babelify清洁代码，我们也需要安装Babelifyvinyl-buffer和gulp-sourcemaps。Babelify默认只能处理以.js, .es, .es6 and .jsx结尾的文件，所以我们需要添加.ts扩展选项。
+npm install --save-dev babelify babel-preset-es2015 vinyl-buffer gulp-sourcemaps
+
+更改gulpfile文件如下：
+
+var gulp = require('gulp');
+var browserify = require('browserify');
+var source = require('vinyl-source-stream');
+var tsify = require('tsify');
+var sourcemaps = require('gulp-sourcemaps');
+var buffer = require('vinyl-buffer');
+var paths = {
+    pages: ['src/*.html']
+};
+
+gulp.task('copyHtml', function () {
+    return gulp.src(paths.pages)
+        .pipe(gulp.dest('dist'));
+});
+
+gulp.task('default', ['copyHtml'], function () {
+    return browserify({
+        basedir: '.',
+        debug: true,
+        entries: ['src/main.ts'],
+        cache: {},
+        packageCache: {}
+    })
+    .plugin(tsify)
+    .transform('babelify', {
+        presets: ['es2015'],
+        extensions: ['.ts']
+    })
+    .bundle()
+    .pipe(source('bundle.js'))
+    .pipe(buffer())
+    .pipe(sourcemaps.init({loadMaps: true}))
+    .pipe(sourcemaps.write('./'))
+    .pipe(gulp.dest('dist'));
+});
+
+我们当然也需要指明TypeScript编译的标准，es2015 tsconfig.json:
+
+{
+    "files": [
+        "src/main.ts"
+    ],
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "target": "es2015"
+    }
+}

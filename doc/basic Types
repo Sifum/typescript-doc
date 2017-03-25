@@ -1,0 +1,57 @@
+基本类型有:
+Boolean : let isDone: boolean = false;
+Number : let decimal：number= 6
+         let hex: number = 0xf006;
+         let binary: number = 0b1010;
+         let octal: number = 0o744;
+String : color: string = "blue";
+         模板字符串：let sentence: string = `Hello, my name is ${ fullName }.`;(注此符号时`)
+         等价于：let sentence: string = "Hello, my name is " + fullName;
+Array : let list: number[] = [1, 2, 3];
+        let list: Array<number> = [1, 2, 3];
+Tuple : let x: [string, number];
+        x = ["hello", 10];//数组有不同的类型
+Enum ：enum Color {Red, Green, Blue};
+        let c: Color = Color.Green;
+        enum Color {Red = 1, Green, Blue};
+        enum Color {Red = 1, Green = 2, Blue = 4};
+        let colorName: string = Color[2];
+Any ：不确定类型的类型
+        let notSure: any = 4;
+        notSure = "maybe a string instead";
+        notSure = false;
+        let list: any[] = [1, true, "free"];
+        list[1] = 100;
+Void ： 方法无返回，变量未定义或null
+        let unusable: void = undefined; //但不实用
+        function warnUser(): void {
+            alert("This is my warning message");
+        }
+Null and Undefined :
+        let u: undefined = undefined;
+        let n: null = null;
+Never : 代表变量类型永远不能得到，如：
+            // Function returning never must have unreachable end point
+            function error(message: string): never {
+                throw new Error(message);
+            }
+
+            // Inferred return type is never
+            function fail() {
+                return error("Something failed");
+            }
+
+            // Function returning never must have unreachable end point
+            function infiniteLoop(): never {
+                while (true) {
+                }
+            }
+
+类型推测：
+let someValue: any = "this is a string";
+let strLength: number = (<string>someValue).length; //尖括号语法
+
+let someValue: any = "this is a string";
+let strLength: number = (someValue as string).length; //as语法
+
+注：尽可能使用let，而不是var

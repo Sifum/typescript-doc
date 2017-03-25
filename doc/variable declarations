@@ -1,0 +1,204 @@
+var声明变量照样可用，以下是var的缺点：
+1.变量是方法作用域的（var-scoping or function-scoping）
+function f(shouldInitialize: boolean) {
+    if (shouldInitialize) {
+        var x = 10;
+    }
+
+    return x;
+}
+
+f(true);  // returns '10'
+f(false); // returns 'undefined'
+
+这种覆盖变量的声明将不是错误
+function sumMatrix(matrix: number[][]) {
+    var sum = 0;
+    for (var i = 0; i < matrix.length; i++) {
+        var currentRow = matrix[i];
+        for (var i = 0; i < currentRow.length; i++) {
+            sum += currentRow[i];
+        }
+    }
+
+    return sum;
+}
+
+2.变量捕获怪癖
+for (var i = 0; i < 10; i++) {
+    setTimeout(function() { console.log(i); }, 100 * i);
+}
+将输出
+10
+10
+...
+10
+因为setTimeout会再几秒后调用，但只有在循环停止后，而循环停止时，i就是10，此时调用setTimeout都将返回10.
+
+解决方法：
+for (var i = 0; i < 10; i++) {
+    // capture the current state of 'i'
+    // by invoking a function with its current value
+    (function(i) {
+        setTimeout(function() { console.log(i); }, 100 * i);
+    })(i);
+}
+
+let与var的不同：
+1.作用域不同，let的作用域是lexical-scoping or block-scoping
+function f(input: boolean) {
+    let a = 100;
+
+    if (input) {
+        // Still okay to reference 'a'
+        let b = a + 1;
+        return b;
+    }
+
+    // Error: 'b' doesn't exist here
+    return b;
+}
+
+2.未声明前使用是错误的
+a++; // illegal to use 'a' before it's declared;
+let a;
+
+
+3.let声明的变量在同一作用域不能重复声明，但var可用
+function f(x) {
+    var x;
+    var x;
+
+    if (true) {
+        var x;
+    }
+}
+
+let x = 10;
+let x = 20; // error: can't re-declare 'x' in the same scope
+
+使用let即正确了
+for (let i = 0; i < 10 ; i++) {
+    setTimeout(function() { console.log(i); }, 100 * i);
+}
+
+0
+1
+2
+...
+9
+
+const的使用：
+虽然const声明常量，但可惜如果是对象，仍然可以通过其属性进行修改
+const numLivesForCat = 9;
+const kitty = {
+    name: "Aurora",
+    numLives: numLivesForCat,
+}
+
+// Error
+kitty = {
+    name: "Danielle",
+    numLives: numLivesForCat
+};
+
+// all "okay"
+kitty.name = "Rory";
+kitty.name = "Kitty";
+kitty.name = "Cat";
+kitty.numLives--;
+
+
+解构（Destructuring）
+//相当于php中的list方法 frist = input[0] second = input[1]
+let input = [1, 2];
+let [first, second] = input;
+console.log(first); // outputs 1
+console.log(second); // outputs 2
+
+// swap variables
+[first, second] = [second, first];
+
+//用于参数
+function f([first, second]: [number, number]) {
+    console.log(first);
+    console.log(second);
+}
+f([1, 2]);
+
+//剩余元素
+let [first, ...rest] = [1, 2, 3, 4];
+console.log(first); // outputs 1
+console.log(rest); // outputs [ 2, 3, 4 ]
+
+忽视其他元素
+let [first] = [1, 2, 3, 4];
+console.log(first); // outputs 1
+
+随意取得
+let [, second, , fourth] = [1, 2, 3, 4];
+
+对象解构：
+let o = {
+    a: "foo",
+    b: 12,
+    c: "bar"
+}
+let { a, b } = o;  //a = o.a, b = o.b
+
+({ a, b } = { a: "baz", b: 101 }); //未声明对象，但赋值了对象的值
+
+//也可使用...语法
+let { a, ...passthrough } = o;
+let total = passthrough.b + passthrough.c.length;
+
+
+属性重命名：
+let { a: newName1, b: newName2 } = o; //用newName1来重新设置o.a的值
+
+如果指定类型需要用这种格式
+let { a, b }: { a: string, b: number } = o;
+
+默认变量：
+b未定义
+function keepWholeObject(wholeObject: { a: string, b?: number }) {
+    let { a, b = 1001 } = wholeObject;
+}
+
+方法声明：
+1.默认参数
+function f({ a, b } = { a: "", b: 0 }): void {
+    // ...
+}
+f(); // ok, default to { a: "", b: 0 }
+2.要么选择都是默认参数，否则要么给全，要么a参数必须给值
+function f({ a, b = 0 } = { a: "" }): void {
+    // ...
+}
+f({ a: "yes" }) // ok, default b = 0
+f() // ok, default to { a: "" }, which then defaults b = 0
+f({}) // error, 'a' is required if you supply an argument
+
+扩展操作符...
+用于数组
+let first = [1, 2];
+let second = [3, 4];
+let bothPlus = [0, ...first, ...second, 5];
+//bothPlus = [0,1,2,3,4,5];
+用于对象
+let defaults = { food: "spicy", price: "$$", ambiance: "noisy" };
+let search = { ...defaults, food: "rich" };
+
+对象扩展的限制：
+1.只针对属性，方法将丢失
+class C {
+  p = 12;
+  m() {
+  }
+}
+let c = new C();
+let clone = { ...c };
+clone.p; // ok
+clone.m(); // error!
+
+2.the Typescript compiler doesn’t allow spreads of type parameters from generic functions
