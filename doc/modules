@@ -1,0 +1,234 @@
+Export
+导出声明：任何的定义（如变量，方法，类，接口等）都能通过增加export关键词被导出
+export interface StringValidator {
+    isAcceptable(s: string): boolean;
+}
+
+export const numberRegexp = /^[0-9]+$/;
+
+export class ZipCodeValidator implements StringValidator {
+    isAcceptable(s: string) {
+        return s.length === 5 && numberRegexp.test(s);
+    }
+}
+
+
+导出语句：当需要将导出的对象重命名导出的话，会十分方便
+class ZipCodeValidator implements StringValidator {
+    isAcceptable(s: string) {
+        return s.length === 5 && numberRegexp.test(s);
+    }
+}
+export { ZipCodeValidator };
+export { ZipCodeValidator as mainValidator };
+
+再次导出：在另一个文件中，导出本文件的模块。
+ParseIntBasedZipCodeValidator.ts
+export class ParseIntBasedZipCodeValidator {
+    isAcceptable(s: string) {
+        return s.length === 5 && parseInt(s).toString() === s;
+    }
+}
+
+// Export original validator but rename it
+export {ZipCodeValidator as RegExpBasedZipCodeValidator} from "./ZipCodeValidator";
+这里在ParseIntBasedZipCodeValidator.ts文件中，就能将ZipCodeValidator文件中的类使用别名进行导出
+
+合并一起导出语法 "export * from 'module'":
+export * from "./StringValidator"; // exports interface 'StringValidator'
+export * from "./LettersOnlyValidator"; // exports class 'LettersOnlyValidator'
+export * from "./ZipCodeValidator";  // exports class 'ZipCodeValidator'
+
+
+导入（import)
+单独导入：
+import { ZipCodeValidator } from "./ZipCodeValidator";
+
+let myValidator = new ZipCodeValidator();
+
+重命名导入：
+import { ZipCodeValidator as ZCV } from "./ZipCodeValidator";
+let myValidator = new ZCV();
+
+整体导入进一个变量中：
+import * as validator from "./ZipCodeValidator";
+let myValidator = new validator.ZipCodeValidator();
+
+不推荐以下方法，但有时也采用：
+import "./my-module.js";
+
+默认导出：使用关键词default，一个模块只能有一个默认导出，对应的导入使用的是不同的导入方法
+JQuery.d.ts
+declare let $: JQuery;
+export default $;
+
+App.ts
+import $ from "JQuery";
+$("button.continue").html( "Next Step..." );
+
+类也可以默认导出：
+ZipCodeValidator.ts
+export default class ZipCodeValidator {
+    static numberRegexp = /^[0-9]+$/;
+    isAcceptable(s: string) {
+        return s.length === 5 && ZipCodeValidator.numberRegexp.test(s);
+    }
+}
+
+Test.ts
+import validator from "./ZipCodeValidator";
+
+let myValidator = new validator();
+
+
+或者
+
+StaticZipCodeValidator.ts
+const numberRegexp = /^[0-9]+$/;
+
+export default function (s: string) {
+    return s.length === 5 && numberRegexp.test(s);
+}
+
+Test.ts
+import validate from "./StaticZipCodeValidator";
+
+let strings = ["Hello", "98052", "101"];
+
+// Use function validate
+strings.forEach(s => {
+  console.log(`"${s}" ${validate(s) ? " matches" : " does not match"}`);
+});
+
+默认导出也可用于变量：
+OneTwoThree.ts
+export default "123";
+
+Log.ts
+import num from "./OneTwoThree";
+
+console.log(num); // "123"
+
+export = 和 import = require()
+导出一个模块使用export = ，导入使用import let= require("module")
+ZipCodeValidator.ts
+let numberRegexp = /^[0-9]+$/;
+class ZipCodeValidator {
+    isAcceptable(s: string) {
+        return s.length === 5 && numberRegexp.test(s);
+    }
+}
+export = ZipCodeValidator;
+
+
+Test.ts
+import zip = require("./ZipCodeValidator");
+
+// Some samples to try
+let strings = ["Hello", "98052", "101"];
+
+// Validators to use
+let validator = new zip();
+
+// Show whether each string passed each validator
+strings.forEach(s => {
+  console.log(`"${ s }" - ${ validator.isAcceptable(s) ? "matches" : "does not match" }`);
+});
+
+下面让我们看看不同的标准的模块导出方法：
+Node.js (CommonJS), require.js (AMD), isomorphic (UMD), SystemJS, or ECMAScript 2015 native modules (ES6) module-loading systems
+SimpleModule.ts
+
+import m = require("mod");
+export let t = m.something + 1;
+AMD / RequireJS SimpleModule.js
+
+define(["require", "exports", "./mod"], function (require, exports, mod_1) {
+    exports.t = mod_1.something + 1;
+});
+CommonJS / Node SimpleModule.js
+
+var mod_1 = require("./mod");
+exports.t = mod_1.something + 1;
+UMD SimpleModule.js
+
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports); if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define(["require", "exports", "./mod"], factory);
+    }
+})(function (require, exports) {
+    var mod_1 = require("./mod");
+    exports.t = mod_1.something + 1;
+});
+System SimpleModule.js
+
+System.register(["./mod"], function(exports_1) {
+    var mod_1;
+    var t;
+    return {
+        setters:[
+            function (mod_1_1) {
+                mod_1 = mod_1_1;
+            }],
+        execute: function() {
+            exports_1("t", t = mod_1.something + 1);
+        }
+    }
+});
+Native ECMAScript 2015 modules SimpleModule.js
+
+import { something } from "./mod";
+export var t = something + 1;
+
+构建模块的建议：
+1.Export尽可能的在开头
+2.如果你只是导出一个类或方法，应该使用export default
+export default class SomeType {
+  constructor() { ... }
+}
+或者
+export default function getThing() { return "thing"; }
+3.如果你要导出多个对象，就把他们放在顶部
+4.显式的罗列导入名字
+import { SomeType, someFunc } from "./MyThings";
+let x = new SomeType();
+let y = someFunc();
+5.如果要导入大量的对象，使用命名空间导入模式
+MyLargeModule.ts
+
+export class Dog { ... }
+export class Cat { ... }
+export class Tree { ... }
+export class Flower { ... }
+Consumer.ts
+
+import * as myLargeModule from "./MyLargeModule.ts";
+let x = new myLargeModule.Dog();
+6.再次导出来扩展导出
+7.不要在模块中使用命名空间
+
+自查：
+1.A file whose only top-level declaration is export namespace Foo { ... } (remove Foo and move everything ‘up’ a level)
+这一点说的问题是：
+export namespace Shapes {
+    export class Triangle { /* ... */ }
+    export class Square { /* ... */ }
+}
+
+
+import * as shapes from "./shapes";
+let t = new shapes.Shapes.Triangle(); // shapes.Shapes?
+移除namespace后：
+export class Triangle { /* ... */ }
+export class Square { /* ... */ }
+
+import * as shapes from "./shapes";
+let t = new shapes.Triangle();
+
+2.A file that has a single export class or export function (consider using export default)
+3.Multiple files that have the same export namespace Foo { at top-level (don’t think that these are going to combine into one Foo!)
+
+

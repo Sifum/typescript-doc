@@ -1,0 +1,65 @@
+使用files属性：
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "sourceMap": true
+    },
+    "files": [
+        "core.ts",
+        "sys.ts",
+        "types.ts",
+        "scanner.ts",
+        "parser.ts",
+        "utilities.ts",
+        "binder.ts",
+        "checker.ts",
+        "emitter.ts",
+        "program.ts",
+        "commandLineParser.ts",
+        "tsc.ts",
+        "diagnosticInformationMap.generated.ts"
+    ]
+}
+
+使用include和exclude属性：
+{
+    "compilerOptions": {
+        "module": "system",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "outFile": "../../built/local/tsc.js",
+        "sourceMap": true
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/*.spec.ts"
+    ]
+}
+
+许多属性都支持glob匹配模式：
+* matches zero or more characters (excluding directory separators)
+? matches any one character (excluding directory separators)
+**/ recursively matches any subdirectory
+
+If typesRoots is specified, only packages under typeRoots will be included
+"typeRoots" : ["./typings"]
+
+If types is specified, only packages listed will be included. 
+{
+   "compilerOptions": {
+       "types" : ["node", "lodash", "express"]
+   }
+}
+
+
+所有其他关于tsconfig配置信息见：
+http://json.schemastore.org/tsconfig
+或
+http://www.typescriptlang.org/docs/handbook/compiler-options.html
