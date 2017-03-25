@@ -1,0 +1,259 @@
+声明方法的方式：
+// Named function
+function add(x, y) {
+    return x + y;
+}
+
+// Anonymous function
+let myAdd = function(x, y) { return x+y; };
+
+方法类型
+让我们给上面两个方法增加类型
+function add(x: number, y: number): number {
+    return x + y;
+}
+
+let myAdd = function(x: number, y: number): number { return x+y; };
+
+完整的形式：
+let myAdd: (x: number, y: number)=>number =
+    function(x: number, y: number): number { return x+y; };
+方法类型有两部分组成：参数类型和返回类型
+
+指明类型：
+// myAdd has the full function type
+let myAdd = function(x: number, y: number): number { return  x + y; };
+
+// The parameters 'x' and 'y' have the type number
+let myAdd: (baseValue:number, increment:number) => number =
+    function(x, y) { return x + y; };
+指明了所有的类型，又称为上下文类型化。
+
+可选和默认参数
+
+正常的参数都需要匹配：
+function buildName(firstName: string, lastName: string) {
+    return firstName + " " + lastName;
+}
+
+let result1 = buildName("Bob");                  // error, too few parameters
+let result2 = buildName("Bob", "Adams", "Sr.");  // error, too many parameters
+let result3 = buildName("Bob", "Adams");         // ah, just right
+
+在参数名后添加?使其具有可选性，如果调用时，未给出，则可选参数为undefined
+function buildName(firstName: string, lastName?: string) {
+    if (lastName)
+        return firstName + " " + lastName;
+    else
+        return firstName;
+}
+
+let result1 = buildName("Bob");                  // works correctly now
+let result2 = buildName("Bob", "Adams", "Sr.");  // error, too many parameters
+let result3 = buildName("Bob", "Adams");         // ah, just right
+
+另一种是默认参数，只要调用时没有提供这个参数或者传递的值是undefined，那么其值就是默认值
+function buildName(firstName: string, lastName = "Smith") {
+    return firstName + " " + lastName;
+}
+
+let result1 = buildName("Bob");                  // works correctly now, returns "Bob Smith"
+let result2 = buildName("Bob", undefined);       // still works, also returns "Bob Smith"
+let result3 = buildName("Bob", "Adams", "Sr.");  // error, too many parameters
+let result4 = buildName("Bob", "Adams");         // ah, just right
+
+不像普通的可选参数，默认初始化参数不需要放在其他参数之后。
+function buildName(firstName = "Will", lastName: string) {
+    return firstName + " " + lastName;
+}
+
+let result1 = buildName("Bob");                  // error, too few parameters
+let result2 = buildName("Bob", "Adams", "Sr.");  // error, too many parameters
+let result3 = buildName("Bob", "Adams");         // okay and returns "Bob Adams"
+let result4 = buildName(undefined, "Adams");     // okay and returns "Will Adams"
+
+剩余参数
+我们把多个同类型的参数放入同一个参数变量中，如下：
+function buildName(firstName: string, ...restOfName: string[]) {
+    return firstName + " " + restOfName.join(" ");
+}
+
+let employeeName = buildName("Joseph", "Samuel", "Lucas", "MacKinzie");
+
+
+function buildName(firstName: string, ...restOfName: string[]) {
+    return firstName + " " + restOfName.join(" ");
+}
+
+let buildNameFun: (fname: string, ...rest: string[]) => string = buildName;
+
+关于this
+在js中，this很灵活，但是也使你在使用时需要知道当前的执行上下文，有时这会令你很困惑，特别在返回一个方法或者传递一个方法作为参数时。
+let deck = {
+    suits: ["hearts", "spades", "clubs", "diamonds"],
+    cards: Array(52),
+    createCardPicker: function() {
+        return function() {
+            let pickedCard = Math.floor(Math.random() * 52);
+            let pickedSuit = Math.floor(pickedCard / 13);
+
+            return {suit: this.suits[pickedSuit], card: pickedCard % 13};
+        }
+    }
+}
+
+let cardPicker = deck.createCardPicker();
+let pickedCard = cardPicker();
+
+alert("card: " + pickedCard.card + " of " + pickedCard.suit);
+运行上面这段代码，将会有错误发生，this在createCardPicker方法中作为返回的方法中使用，其实在真正调用时，这个this将会指向window上。
+当cardPicker()调用时，其实时当都调用了createCardPicker的返回方法，使得this并不会指向deck对象。而是全局对象。
+
+在传统的js中，我们可以用that = this来指定对象。
+但在ES6中会更简单，只要使用箭头语法（arrow syntax），如下即可：
+let deck = {
+    suits: ["hearts", "spades", "clubs", "diamonds"],
+    cards: Array(52),
+    createCardPicker: function() {
+        // NOTE: the line below is now an arrow function, allowing us to capture 'this' right here
+        return () => {
+            let pickedCard = Math.floor(Math.random() * 52);
+            let pickedSuit = Math.floor(pickedCard / 13);
+
+            return {suit: this.suits[pickedSuit], card: pickedCard % 13};
+        }
+    }
+}
+
+let cardPicker = deck.createCardPicker();
+let pickedCard = cardPicker();
+
+alert("card: " + pickedCard.card + " of " + pickedCard.suit);
+看起来像不像java的lambda表达式语法？
+
+但是this.suits[pickedSuit]仍然类型是any，为了解决这个问题，你能显式的指明this参数。
+function f(this: void) {
+    // make sure `this` is unusable in this standalone function
+}
+下面让我们增加例子来展开阐述这个类型：
+interface Card {
+    suit: string;
+    card: number;
+}
+interface Deck {
+    suits: string[];
+    cards: number[];
+    createCardPicker(this: Deck): () => Card;
+}
+let deck: Deck = {
+    suits: ["hearts", "spades", "clubs", "diamonds"],
+    cards: Array(52),
+    // NOTE: The function now explicitly specifies that its callee must be of type Deck
+    createCardPicker: function(this: Deck) {
+        return () => {
+            let pickedCard = Math.floor(Math.random() * 52);
+            let pickedSuit = Math.floor(pickedCard / 13);
+
+            return {suit: this.suits[pickedSuit], card: pickedCard % 13};
+        }
+    }
+}
+
+let cardPicker = deck.createCardPicker();
+let pickedCard = cardPicker();
+
+alert("card: " + pickedCard.card + " of " + pickedCard.suit);
+现在this就是Deck类型了。
+
+this参数在回调中
+源于外部调用包含this的方法时如同一般的方法一样，this是undefined
+可以采用下面的方法阻止这个错误的发生
+首先，库作者应该指明this回调：
+interface UIElement {
+    addClickListener(onclick: (this: void, e: Event) => void): void;
+}
+this: void意味着addClickListener期望onclick是一个不需要this类型的方法. 
+第二点，用this注明你的调用代码
+class Handler {
+    info: string;
+    onClickBad(this: Handler, e: Event) {
+        // oops, used this here. using this callback would crash at runtime
+        this.info = e.message;
+    };
+}
+let h = new Handler();
+uiElement.addClickListener(h.onClickBad); // error!
+onClickBad方法应该在Handler上被调用，但addClickListener 需要一个this: void方法。
+解决这个错误，只要如下：
+class Handler {
+    info: string;
+    onClickGood(this: void, e: Event) {
+        // can't use this here because it's of type void!
+        console.log('clicked!');
+    }
+}
+let h = new Handler();
+uiElement.addClickListener(h.onClickGood);
+当然，着也意味着，不能使用this.info,如果你同时都想用它们，就使用箭头方法：
+class Handler {
+    info: string;
+    onClickGood = (e: Event) => { this.info = e.message }
+}
+这样能运行，是因为箭头方法不会捕捉this，这样你就能传递它们到this: void方法中了。
+
+重载（Overloads）
+let suits = ["hearts", "spades", "clubs", "diamonds"];
+
+function pickCard(x): any {
+    // Check to see if we're working with an object/array
+    // if so, they gave us the deck and we'll pick the card
+    if (typeof x == "object") {
+        let pickedCard = Math.floor(Math.random() * x.length);
+        return pickedCard;
+    }
+    // Otherwise just let them pick the card
+    else if (typeof x == "number") {
+        let pickedSuit = Math.floor(x / 13);
+        return { suit: suits[pickedSuit], card: x % 13 };
+    }
+}
+
+let myDeck = [{ suit: "diamonds", card: 2 }, { suit: "spades", card: 10 }, { suit: "hearts", card: 4 }];
+let pickedCard1 = myDeck[pickCard(myDeck)];
+alert("card: " + pickedCard1.card + " of " + pickedCard1.suit);
+
+let pickedCard2 = pickCard(15);
+alert("card: " + pickedCard2.card + " of " + pickedCard2.suit);
+在js中，一个方法中根据参数不同类型返回不同类型的对象，并不常用。‘
+
+但我们也可以使用重载
+使用多个方法列表作为重载，方法列表用于编译器解析方法调用，如下：
+
+let suits = ["hearts", "spades", "clubs", "diamonds"];
+
+function pickCard(x: {suit: string; card: number; }[]): number; //声明pickCard方法列表
+function pickCard(x: number): {suit: string; card: number; };
+
+function pickCard(x): any {  //具体pickCard方法实现
+    // Check to see if we're working with an object/array
+    // if so, they gave us the deck and we'll pick the card
+    if (typeof x == "object") {
+        let pickedCard = Math.floor(Math.random() * x.length);
+        return pickedCard;
+    }
+    // Otherwise just let them pick the card
+    else if (typeof x == "number") {
+        let pickedSuit = Math.floor(x / 13);
+        return { suit: suits[pickedSuit], card: x % 13 };
+    }
+}
+
+let myDeck = [{ suit: "diamonds", card: 2 }, { suit: "spades", card: 10 }, { suit: "hearts", card: 4 }];
+let pickedCard1 = myDeck[pickCard(myDeck)];
+alert("card: " + pickedCard1.card + " of " + pickedCard1.suit);
+
+let pickedCard2 = pickCard(15);
+alert("card: " + pickedCard2.card + " of " + pickedCard2.suit);
+
+
+

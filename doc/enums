@@ -1,0 +1,52 @@
+枚举的一般例子：
+enum Direction {
+    Up = 1,
+    Down,
+    Left,
+    Right
+}
+1.如果没有初始值，那么默认从0开始
+2.初始化枚举表达式，可以是下面形式：
+        数字字面量
+        引用之前定义的常量枚举成员
+        +, -, ~ 一元运算符
+        +, -, *, /, %, <<, >>, >>>, &, |, ^二进制运算符
+
+如下的定义可以的：
+enum FileAccess {
+    // constant members
+    None,
+    Read    = 1 << 1,
+    Write   = 1 << 2,
+    ReadWrite  = Read | Write,
+    // computed member
+    G = "123".length
+}       
+
+枚举确实是一个运行时对象：
+enum Enum {
+    A
+}
+let a = Enum.A;
+let nameOfA = Enum[Enum.A]; // "A"
+会被编译成：
+var Enum;
+(function (Enum) {
+    Enum[Enum["A"] = 0] = "A";
+})(Enum || (Enum = {}));
+var a = Enum.A;
+var nameOfA = Enum[Enum.A]; // "A"
+
+常量枚举：
+const enum Enum {
+    A = 1,
+    B = A * 2
+}
+
+Ambient enums：
+
+declare enum Enum {
+    A = 1,
+    B,
+    C = 2
+}

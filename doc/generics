@@ -1,0 +1,156 @@
+在使用泛型前，我们通常这样定义方法：
+function identity(arg: number): number {
+    return arg;
+}
+或
+function identity(arg: any): any {
+    return arg;
+}
+
+使用泛型后，如下：
+function identity<T>(arg: T): T {
+    return arg;
+}
+arg变量的类型将有调用者决定
+可以这样调用方法：
+let output = identity<string>("myString");  // type of output will be 'string'
+指定了T为string
+我们也可让编译器自动判断：
+let output = identity("myString");  // type of output will be 'string'
+
+使用泛型方法的注意点：
+1.获取arg的长度将不可行，因为我们也不知道arg是什么类型，有些类型是没有length的
+function loggingIdentity<T>(arg: T): T {
+    console.log(arg.length);  // Error: T doesn't have .length
+    return arg;
+}
+当然指定成泛型数组就可以了：
+function loggingIdentity<T>(arg: T[]): T[] {
+    console.log(arg.length);  // Array has a .length, so no more error
+    return arg;
+}
+下面这个也是同样的例子：
+function loggingIdentity<T>(arg: Array<T>): Array<T> {
+    console.log(arg.length);  // Array has a .length, so no more error
+    return arg;
+}
+
+2.泛型方法的定义：
+function identity<T>(arg: T): T {
+    return arg;
+}
+
+let myIdentity: <T>(arg: T) => T = identity;
+
+3.泛型代号可以不同：
+function identity<T>(arg: T): T {
+    return arg;
+}
+
+let myIdentity: <U>(arg: U) => U = identity;
+
+4.也可用做对象字面量形式：
+function identity<T>(arg: T): T {
+    return arg;
+}
+
+let myIdentity: {<T>(arg: T): T} = identity;
+
+
+泛型接口：
+interface GenericIdentityFn {
+    <T>(arg: T): T;
+}
+
+function identity<T>(arg: T): T {
+    return arg;
+}
+
+let myIdentity: GenericIdentityFn = identity;
+
+也可将泛型参数称为整个接口的参数：
+interface GenericIdentityFn<T> {
+    (arg: T): T;
+}
+
+function identity<T>(arg: T): T {
+    return arg;
+}
+
+let myIdentity: GenericIdentityFn<number> = identity;
+
+
+泛型类
+class GenericNumber<T> {
+    zeroValue: T;
+    add: (x: T, y: T) => T;
+}
+
+let myGenericNumber = new GenericNumber<number>();
+myGenericNumber.zeroValue = 0;
+myGenericNumber.add = function(x, y) { return x + y; };
+
+let stringNumeric = new GenericNumber<string>();
+stringNumeric.zeroValue = "";
+stringNumeric.add = function(x, y) { return x + y; };
+
+alert(stringNumeric.add(stringNumeric.zeroValue, "test"));
+
+泛型约束：
+interface Lengthwise {
+    length: number;
+}
+
+function loggingIdentity<T extends Lengthwise>(arg: T): T {
+    console.log(arg.length);  // Now we know it has a .length property, so no more error
+    return arg;
+}
+
+loggingIdentity(3);  // Error, number doesn't have a .length property
+loggingIdentity({length: 10, value: 3});
+因为T约束称为必须是Lengthwise的类型或子类型。
+
+1.泛型参数之间的相互制约：
+function getProperty<T, K extends keyof T>(obj: T, key: K) {
+    return obj[key];
+}
+
+let x = { a: 1, b: 2, c: 3, d: 4 };
+
+getProperty(x, "a"); // okay
+getProperty(x, "m"); // error: Argument of type 'm' isn't assignable to 'a' | 'b' | 'c' | 'd'.
+K extends keyof T实现了K,T之间的约束
+
+当使用泛型在Typescript中创建工厂时，需要通过它们的构造函数方法指明类的类型。
+function create<T>(c: {new(): T; }): T {
+    return new c();
+}
+
+进一步深入的例子：
+class BeeKeeper {
+    hasMask: boolean;
+}
+
+class ZooKeeper {
+    nametag: string;
+}
+
+class Animal {
+    numLegs: number;
+}
+
+class Bee extends Animal {
+    keeper: BeeKeeper;
+}
+
+class Lion extends Animal {
+    keeper: ZooKeeper;
+}
+
+function findKeeper<A extends Animal, K> (a: {new(): A;
+    prototype: {keeper: K}}): K {
+
+    return a.prototype.keeper;
+}
+
+findKeeper(Lion).nametag;  // typechecks!

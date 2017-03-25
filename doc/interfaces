@@ -1,0 +1,337 @@
+首先我们看一下下面这个例子：
+function printLabel(labelledObj: { label: string }) {
+    console.log(labelledObj.label);
+}
+
+let myObj = {size: 10, label: "Size 10 Object"};
+printLabel(myObj);
+
+printLabel方法参数中对labelledObj参数对象的label属性进行了类型约束。
+下面我们用接口的方式实现上面的方法：
+interface LabelledValue {
+    label: string;
+}
+
+function printLabel(labelledObj: LabelledValue) {
+    console.log(labelledObj.label);
+}
+
+let myObj = {size: 10, label: "Size 10 Object"};
+printLabel(myObj);
+
+注意：1.在es6中我们并不需要使用implements关键字；
+      2.类型检测不需要这些属性是按顺序的。
+
+可选属性：
+interface SquareConfig {
+    color?: string;
+    width?: number;
+}
+
+function createSquare(config: SquareConfig): {color: string; area: number} {
+    let newSquare = {color: "white", area: 100};
+    if (config.color) {
+        newSquare.color = config.color;
+    }
+    if (config.width) {
+        newSquare.area = config.width * config.width;
+    }
+    return newSquare;
+}
+
+let mySquare = createSquare({color: "black"});
+
+SquareConfig接口中的属性即为可选属性，可以选择性的定义。
+使用它们的好处是可以使用未定义的属性时，可以及时的返回错误信息。
+interface SquareConfig {
+    color?: string;
+    width?: number;
+}
+
+function createSquare(config: SquareConfig): { color: string; area: number } {
+    let newSquare = {color: "white", area: 100};
+    if (config.color) {
+        // Error: Property 'clor' does not exist on type 'SquareConfig'
+        newSquare.color = config.clor;
+    }
+    if (config.width) {
+        newSquare.area = config.width * config.width;
+    }
+    return newSquare;
+}
+
+let mySquare = createSquare({color: "black"});
+
+只读属性:
+interface Point {
+    readonly x: number;
+    readonly y: number;
+}
+
+如下使用即会出现错误：
+let p1: Point = { x: 10, y: 20 };
+p1.x = 5; // error!
+
+使用ReadonlyArray<T>约束更能防止数组的任何改变。它甚至移除了数组的方法。
+let a: number[] = [1, 2, 3, 4];
+let ro: ReadonlyArray<number> = a;
+ro[0] = 12; // error!
+ro.push(5); // error!
+ro.length = 100; // error!
+a = ro; // error!
+
+ReadonlyArray<T>数组转变会原来的数组：
+a = ro as number[];
+
+readonly和const的选择：
+取决于使用于变量还是属性，使用const修改变量，而属性前面则使用readonly。
+
+多余属性检测（Excess Property Checks）
+interface SquareConfig {
+    color?: string;
+    width?: number;
+}
+
+function createSquare(config: SquareConfig): { color: string; area: number } {
+    // ...
+}
+
+let mySquare = createSquare({ colour: "red", width: 100 });
+
+观察我们将color写错为colour了，纯js中使不会报错的，但TypeScript可能就会出现一个bug。
+将对象字面量赋值给其他变量，或者用参数进行传递，都会发生多余属性检测。
+所以下面的错误就不足为奇了：
+// error: 'colour' not expected in type 'SquareConfig'
+let mySquare = createSquare({ colour: "red", width: 100 });
+
+绕过检测非常简单，其中最简单的方法就是使用类型推测：
+let mySquare = createSquare({ width: 100, opacity: 0.5 } as SquareConfig);
+更好的方法是，在接口中增加string索引签名，来确定对象可以有其他额外属性：
+interface SquareConfig {
+    color?: string;
+    width?: number;
+    [propName: string]: any;
+}
+还有一种方法是，先赋值给其他变量，如下面的squareOptions，之后squareOptions就不会进行多余属性检测了：
+let squareOptions = { colour: "red", width: 100 };
+let mySquare = createSquare(squareOptions);
+
+方法类型（Function Types）
+interface SearchFunc {
+    (source: string, subString: string): boolean;
+}
+方法定义在接口中像是调用签名，更像只有参数列表和返回值类型的方法声明。
+
+使用，实现方法：
+let mySearch: SearchFunc;
+mySearch = function(source: string, subString: string) {
+    let result = source.search(subString);
+    return result > -1;
+}
+但参数名可以不同，如下：
+let mySearch: SearchFunc;
+mySearch = function(src: string, sub: string): boolean {
+    let result = src.search(sub);
+    return result > -1;
+}
+更简洁的写法：
+let mySearch: SearchFunc;
+mySearch = function(src, sub) {
+    let result = src.search(sub);
+    return result > -1;
+}
+
+
+索引性类型（Indexable Types）：
+索引签名index指定了索引类型
+interface StringArray {
+    [index: number]: string;
+}
+
+let myArray: StringArray;
+myArray = ["Bob", "Fred"];
+
+let myStr: string = myArray[0];
+上面指明了StringArray接口有个index签名，它指出了一个StringArray使用number作为索引，会返回一个字符串。
+
+支持两种索引：string和number
+但是因为当用数字作为索引类型时，js实际上在索引定义到对象上前会将其转换成字符串，这就意味着：数字100的索引和字符串“100”的索引是一回事。
+索引下面将产生错误：
+class Animal {
+    name: string;
+}
+class Dog extends Animal {
+    breed: string;
+}
+
+// Error: indexing with a 'string' will sometimes get you a Dog!
+interface NotOkay {
+    [x: number]: Animal;
+    [x: string]: Dog;
+}
+
+下面因为index的String类型索引声明了obj.property可以使用obj["property"]的形式取得，但name的类型使其出现类型检测错误。
+name’s type does not match the string index’s type
+interface NumberDictionary {
+    [index: string]: number;
+    length: number;    // ok, length is a number
+    name: string;      // error, the type of 'name' is not a subtype of the indexer
+}
+
+使用readonly防止属性值改变：
+interface ReadonlyStringArray {
+    readonly [index: number]: string;
+}
+let myArray: ReadonlyStringArray = ["Alice", "Bob"];
+myArray[2] = "Mallory"; // error!
+
+类类型（Class Types）
+实现接口：
+interface ClockInterface {
+    currentTime: Date;
+}
+
+class Clock implements ClockInterface {
+    currentTime: Date;
+    constructor(h: number, m: number) { }
+}
+使用方法：
+interface ClockInterface {
+    currentTime: Date;
+    setTime(d: Date);
+}
+
+class Clock implements ClockInterface {
+    currentTime: Date;
+    setTime(d: Date) {
+        this.currentTime = d;
+    }
+    constructor(h: number, m: number) { }
+}
+静态和实例的不同：
+如果你创建带有构造器的接口，然后创建一个继承这个接口的类，将会报错
+interface ClockConstructor {
+    new (hour: number, minute: number);
+}
+
+class Clock implements ClockConstructor {
+    currentTime: Date;
+    constructor(h: number, m: number) { }
+}
+这是因为一个类实现一个接口，只有类的实例是被检测的，因为构造器存在静态里，所以不包含在这个检测中。
+
+下面这个例子中，ClockConstructor有一个构造器，ClockInterface有一个实例方法，为了方便，我们还定义了一个createClock方法用于创建实例
+（工厂模式）
+interface ClockConstructor {
+    new (hour: number, minute: number): ClockInterface;
+}
+interface ClockInterface {
+    tick();
+}
+
+function createClock(ctor: ClockConstructor, hour: number, minute: number): ClockInterface {
+    return new ctor(hour, minute);
+}
+
+class DigitalClock implements ClockInterface {
+    constructor(h: number, m: number) { }
+    tick() {
+        console.log("beep beep");
+    }
+}
+class AnalogClock implements ClockInterface {
+    constructor(h: number, m: number) { }
+    tick() {
+        console.log("tick tock");
+    }
+}
+
+let digital = createClock(DigitalClock, 12, 17);
+let analog = createClock(AnalogClock, 7, 32);
+因为createClock的第一个参数类型是ClockConstructor，在createClock(AnalogClock, 7, 32)里，检测了AnalogClock有正确的构造器签名。
+
+
+扩展接口（Extending Interfaces）
+接口之间能用extends进行扩展
+interface Shape {
+    color: string;
+}
+
+interface Square extends Shape {
+    sideLength: number;
+}
+
+let square = <Square>{};
+square.color = "blue";
+square.sideLength = 10;
+
+一个接口也可以扩展自多个其他接口：
+interface Shape {
+    color: string;
+}
+
+interface PenStroke {
+    penWidth: number;
+}
+
+interface Square extends Shape, PenStroke {
+    sideLength: number;
+}
+
+let square = <Square>{};
+square.color = "blue";
+square.sideLength = 10;
+square.penWidth = 5.0;
+
+混杂类型（Hybrid Types）
+接口中存在几种不同的类型
+interface Counter {
+    (start: number): string;
+    interval: number;
+    reset(): void;
+}
+
+function getCounter(): Counter {
+    let counter = <Counter>function (start: number) { };
+    counter.interval = 123;
+    counter.reset = function () { };
+    return counter;
+}
+
+let c = getCounter();
+c(10);
+c.reset();
+c.interval = 5.0;
+
+接口继承类（Interfaces Extending Classes)
+SelectableControl接口继承了Control的所有成员，包括私有属性state，Button和TextBox拥有select方法，因为它们继承自Control.
+Image和Location则没有。
+class Control {
+    private state: any;
+}
+
+interface SelectableControl extends Control {
+    select(): void;
+}
+
+class Button extends Control {
+    select() { }
+}
+
+class TextBox extends Control {
+    select() { }
+}
+
+class Image {
+    select() { }
+}
+
+class Location {
+    select() { }
+}
+当接口继承类，它将继承类的成员，但不包括它们的实现。
+这就像接口中重新声明了所有类的成员但没有实现它们。
+接口会继承基类的即便是私有和保护的属性。
+这意味着当你创建一个接口继承一个拥有私有或保护属性的类时，这个接口只能被这个类或者其子类实现（如实例中的Button和TextBox实现）。
+
+
