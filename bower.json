@@ -1,0 +1,16 @@
+{
+  "name": "Minson",
+  "description": "this is Typescript",
+  "main": "./dist/main.js",
+  "authors": [
+    "Minson Chan"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "node",
+    "typescipt"
+  ],
+  "moduleType": [],
+  "homepage": "None",
+  "private": true
+}
