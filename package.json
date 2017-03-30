@@ -32,6 +32,7 @@
     "gulp-uglify": "^2.1.2",
     "gulp-useref": "^3.0.8",
     "gulp-util": "^3.0.8",
+    "jquery": "^3.2.1",
     "main-bower-files": "^2.13.1",
     "tsify": "^3.0.1",
     "typescript": "^2.2.1",
@@ -39,5 +40,8 @@
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.9.0",
     "webpack": "^2.3.2"
+  },
+  "dependencies": {
+    "@types/jquery": "^2.0.41"
   }
 }

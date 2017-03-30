@@ -48,11 +48,11 @@ gulp.task('scripts', ()=>{
 });
 
 gulp.task('fonts', () => {
-  return gulp.src('app/fonts/*.*')
+  return gulp.src(require('main-bower-files')('**/*.{eot,svg,ttf,woff,woff2}', function (err) {})
+    .concat('app/fonts/**/*'))
     .pipe(gulp.dest('.tmp/fonts'))
     .pipe(gulp.dest('dist/fonts'));
 });
-
 
 gulp.task('html', ['styles', 'scripts'], ()=>{
     return gulp.src('app/*.html')
@@ -94,8 +94,7 @@ gulp.task('serve', ['styles', 'scripts', 'fonts'], () => {
     server: {
       baseDir: ['.tmp', 'app'],
       routes: {
-        '/bower_components': 'bower_components',
-        '/scripts':  '.tmp/scripts'
+        '/bower_components': 'bower_components'
       }
     }
   });

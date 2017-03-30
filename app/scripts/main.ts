@@ -1,24 +1,27 @@
+import * as $ from "./base"
 import { sayHello } from "./greet";
 
-let fullName: string = `Minson`;
-function showHello(divName: string, name: string) {
-    const elt = document.getElementById(divName);
-    elt.innerText = sayHello(name);
+const elem = $("#showMsg");
+
+function showContent(content: string){
+    elem.html(content);
 }
 
-function sumMatrix(matrix: number[][]) {
-    var sum = 0;
-    for (var i = 0; i < matrix.length; i++) {
-        var currentRow = matrix[i];
-        for (var i = 0; i < currentRow.length; i++) {
-            sum += currentRow[i];
-        }
-    }
 
-    return sum;
-}
-let mattrix: number[][] = [[1,2,3],[4,6,5]] ;
-let sum: number = sumMatrix(mattrix);
+let name: string = "name";
+let isDone: boolean = true;
+let list: string[] = ["dfds", "dfsd"];
+let x: [boolean, string];
+x = [isDone, name];
 
-showHello("greeting",`${sum}`);
-showHello("aboutyou", `${fullName}`);
+
+enum Color {RED, GREEN, BLUE};
+let c: Color = Color.BLUE;
+
+let notSure: any = 5;
+notSure = "I'm not sure!";
+
+
+showContent(c);
+
+
