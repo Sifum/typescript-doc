@@ -1,9 +1,10 @@
 {
     "files": [
-        "app/scripts/main.ts"
+        "app/scripts/main.ts",
+        "app/scripts/greet.ts"
     ],
     "compilerOptions": {
         "noImplicitAny": true,
-        "target": "es2015"
+        "target": "es5"
     }
 }

@@ -1,5 +1,4 @@
 const gulp = require("gulp");
-
 const browserify = require("browserify");
 const browserSync = require('browser-sync');
 const source = require('vinyl-source-stream');
@@ -22,25 +21,30 @@ var paths = {
 };
 
 gulp.task('styles', ()=> {
-    return sass('app/styles/*.scss')
+    return sass('app/styles/*.scss') //gulp-ruby-sass处理
             .on('error', sass.logError)
-            .pipe($.plumber())
-            .pipe($.sourcemaps.init())
-            .pipe($.autoprefixer({browsers: ['> 1%', 'last 2 versions', 'Firefox ESR']})) 
+            .pipe($.plumber()) //任务错误中断自动重传
+            .pipe($.sourcemaps.init()) //添加sourcemaps
+            .pipe($.autoprefixer({browsers: ['> 1%', 'last 2 versions', 'Firefox ESR']})) //厂商前缀
             .pipe($.sourcemaps.write())
             .pipe(gulp.dest('.tmp/styles'))
-            .pipe(reload({stream: true}));
+            .pipe(reload({stream: true}));//浏览器重载
 });
 
 
 gulp.task('scripts', ()=>{
-    var tsResult = gulp.src('app/scripts/*.ts')
-                    .pipe($.sourcemaps.init())
-                    .pipe(tsProject());
-    return tsResult.js
-            .pipe($.sourcemaps.write())
+    return browserify({
+                basedir: '.',
+                debug: true,
+                entries: ['app/scripts/main.ts'],
+                cache: {},
+                packageCache: {}
+            })    //通过入口文件，合并所有require()模块到本文件，
+            .plugin(tsify) //调用Typescript编译代码
+            .bundle()  //合并
+            .pipe(source('main.js'))
             .pipe(gulp.dest('.tmp/scripts'))
-            .pipe(reload({stream: true}));
+            .pipe(reload({stream: true}));  //浏览器重载
 });
 
 gulp.task('fonts', () => {
@@ -54,20 +58,20 @@ gulp.task('html', ['styles', 'scripts'], ()=>{
     return gulp.src('app/*.html')
             .pipe($.useref({searchPath: ['.tmp', 'app', '.']}))
             .pipe($.if('*.js', $.uglify()))
-            .pipe($.if('*.css', $.cssnano({safe: true, autoprefixer: false})))
-            .pipe($.if('*.html', $.htmlmin({collapseWhitespace: true})))
+            .pipe($.if('*.css', $.cssnano({safe: true, autoprefixer: false}))) //css压缩
+            .pipe($.if('*.html', $.htmlmin({collapseWhitespace: true}))) //html压缩
             .pipe(gulp.dest('dist'));
 });
 
-// gulp.task('images', ()=>{
-//     return gulp.src('app/images/**/*')
-//             .pipe($.cache($.imagemin({
-//                 progressive: true,
-//                 interlaced: true,
-//                 svgoPlugins: [{cleanupIDs: false}]
-//             })))
-//             .pipe(gulp.dest('dist/images'));
-// });
+gulp.task('images', ()=>{
+    return gulp.src('app/images/**/*')
+            .pipe($.cache($.imagemin({
+                progressive: true,
+                interlaced: true,
+                svgoPlugins: [{cleanupIDs: false}]
+            })))
+            .pipe(gulp.dest('dist/images'));
+});
 
 
 gulp.task('extras', ()=>{
@@ -91,7 +95,7 @@ gulp.task('serve', ['styles', 'scripts', 'fonts'], () => {
       baseDir: ['.tmp', 'app'],
       routes: {
         '/bower_components': 'bower_components',
-        './scripts' : '.tmp/scripts'
+        '/scripts':  '.tmp/scripts'
       }
     }
   });
@@ -115,30 +119,3 @@ gulp.task('wiredep', () => {
     }))
     .pipe(gulp.dest('app/styles'));
 });
-
-
-
-// var watchedBrowserify = watchify(browserify({
-//     basedir: '.',
-//     debug: true,
-//     entries: ['src/main.ts'],
-//     cache: {},
-//     packageCache: {}
-// }).plugin(tsify));
-
-// gulp.task("copy-html", function () {
-//     return gulp.src(paths.pages)
-//         .pipe(gulp.dest("dist"));
-// });
-
-// function bundle() {
-//     return watchedBrowserify
-//         .bundle()
-//         .pipe(source('bundle.js'))
-//         .pipe(gulp.dest("dist"));
-// }
-
-
-// gulp.task("default", ["copy-html"], bundle);
-// watchedBrowserify.on("update", bundle);
-// watchedBrowserify.on("log", gutil.log);

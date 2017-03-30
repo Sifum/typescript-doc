@@ -21,3 +21,4 @@ let mattrix: number[][] = [[1,2,3],[4,6,5]] ;
 let sum: number = sumMatrix(mattrix);
 
 showHello("greeting",`${sum}`);
+showHello("aboutyou", `${fullName}`);

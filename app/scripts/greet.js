@@ -1,5 +1,0 @@
-export function sayHello(name) {
-    return `output: ${name}`;
-}
-
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImdyZWV0LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBLE1BQU0sbUJBQW1CLElBQVk7SUFDakMsTUFBTSxDQUFDLFdBQVcsSUFBSSxFQUFFLENBQUM7QUFDN0IsQ0FBQyIsImZpbGUiOiJncmVldC5qcyIsInNvdXJjZXNDb250ZW50IjpbImV4cG9ydCBmdW5jdGlvbiBzYXlIZWxsbyhuYW1lOiBzdHJpbmcpIHtcclxuICAgIHJldHVybiBgb3V0cHV0OiAke25hbWV9YDtcclxufSJdLCJzb3VyY2VSb290IjoiL3NvdXJjZS8ifQ==
