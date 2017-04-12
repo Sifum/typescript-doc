@@ -1,24 +1,23 @@
-import { sayHello } from "./greet";
+import * as $ from "jquery";
 
-let fullName: string = `Minson`;
-function showHello(divName: string, name: string) {
-    const elt = document.getElementById(divName);
-    elt.innerText = sayHello(name);
-}
+let config = {
+        colors: ["red", "green", "blue"],
+        appName: "proj",
+        author: "Minson"
+};
 
-function sumMatrix(matrix: number[][]) {
-    var sum = 0;
-    for (var i = 0; i < matrix.length; i++) {
-        var currentRow = matrix[i];
-        for (var i = 0; i < currentRow.length; i++) {
-            sum += currentRow[i];
-        }
-    }
+const util = new Util();
+const elem = $("#showMsg");
+const btn = $("#btn");
 
-    return sum;
-}
-let mattrix: number[][] = [[1,2,3],[4,6,5]] ;
-let sum: number = sumMatrix(mattrix);
+btn.click(()=>{
+    elem.html("btn clicked!");
+});
 
-showHello("greeting",`${sum}`);
-showHello("aboutyou", `${fullName}`);
+let name: string = "minson";
+let age: string = "31";
+let address: string = "shanghai";
+
+let result1 =  util.addMoreString(name, age, address);
+
+elem.html(result1);

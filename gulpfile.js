@@ -20,6 +20,7 @@ var paths = {
     pages: ['src/*.html']
 };
 
+
 gulp.task('styles', ()=> {
     return sass('app/styles/*.scss') //gulp-ruby-sass处理
             .on('error', sass.logError)
@@ -43,16 +44,17 @@ gulp.task('scripts', ()=>{
             .plugin(tsify) //调用Typescript编译代码
             .bundle()  //合并
             .pipe(source('main.js'))
+            .pipe($.plumber())
             .pipe(gulp.dest('.tmp/scripts'))
             .pipe(reload({stream: true}));  //浏览器重载
 });
 
 gulp.task('fonts', () => {
-  return gulp.src('app/fonts/*.*')
+  return gulp.src(require('main-bower-files')('**/*.{eot,svg,ttf,woff,woff2}', function (err) {})
+    .concat('app/fonts/**/*'))
     .pipe(gulp.dest('.tmp/fonts'))
     .pipe(gulp.dest('dist/fonts'));
 });
-
 
 gulp.task('html', ['styles', 'scripts'], ()=>{
     return gulp.src('app/*.html')
@@ -94,8 +96,7 @@ gulp.task('serve', ['styles', 'scripts', 'fonts'], () => {
     server: {
       baseDir: ['.tmp', 'app'],
       routes: {
-        '/bower_components': 'bower_components',
-        '/scripts':  '.tmp/scripts'
+        '/bower_components': 'bower_components'
       }
     }
   });
