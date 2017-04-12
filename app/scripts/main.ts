@@ -1,4 +1,25 @@
 import * as $ from "jquery";
+import { StringValidator } from "./StringValidator";
+
+class Ss implements StringValidator {
+    name: string;
+
+    constructor(s: string) {
+        this.name = s;
+    }
+    isAcceptable() {
+        return this.name.length === 5;
+    }
+}
+
+class Sss extends Ss {
+    constructor(ss: string){
+        super(ss);
+    }
+}
+
+let ss = new Sss("sssss");
+
 
 let config = {
         colors: ["red", "green", "blue"],
@@ -6,7 +27,6 @@ let config = {
         author: "Minson"
 };
 
-const util = new Util();
 const elem = $("#showMsg");
 const btn = $("#btn");
 
@@ -18,6 +38,10 @@ let name: string = "minson";
 let age: string = "31";
 let address: string = "shanghai";
 
-let result1 =  util.addMoreString(name, age, address);
+if (ss.isAcceptable()) {
+    elem.html("is ss");
+} else {
+    elem.html(config.author);
+}
 
-elem.html(result1);
+
