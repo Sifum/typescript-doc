@@ -7,7 +7,7 @@ const tsify = require("tsify");
 const ts = require("gulp-typescript");
 const tsProject = ts.createProject("tsconfig.json");
 const gutil = require("gulp-util");
-const sass = require("gulp-ruby-sass");
+const sass = require("gulp-sass");
 const del = require("del");
 const buffer = require('vinyl-buffer');
 const gulpLoadPlugins = require('gulp-load-plugins');
@@ -22,9 +22,8 @@ var paths = {
 
 
 gulp.task('styles', () => {
-    return sass('app/styles/*.scss') //gulp-ruby-sass处理
-        .on('error', sass.logError)
-        .pipe($.plumber()) //任务错误中断自动重传
+    return gulp.src('app/styles/*.scss')
+        .pipe(sass.sync().on('error', sass.logError))
         .pipe($.sourcemaps.init()) //添加sourcemaps
         .pipe($.autoprefixer({ browsers: ['> 1%', 'last 2 versions', 'Firefox ESR'] })) //厂商前缀
         .pipe($.sourcemaps.write())
@@ -34,6 +33,7 @@ gulp.task('styles', () => {
 
 
 gulp.task('scripts', () => {
+
     return browserify({
             basedir: '.',
             debug: true,
@@ -41,10 +41,10 @@ gulp.task('scripts', () => {
             cache: {},
             packageCache: {}
         }) //通过入口文件，合并所有require()模块到本文件
+        .plugin($.plumber)
         .plugin(tsify) //调用Typescript编译代码
         .bundle() //合并
         .pipe(source('main.js'))
-        .pipe($.plumber())
         .pipe(gulp.dest('.tmp/scripts'))
         .pipe(reload({ stream: true })); //浏览器重载
 });

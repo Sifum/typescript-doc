@@ -50,7 +50,7 @@ if (ss.isAcceptable()) {
 function btnFunc() {
     let str = `
         <div>
-            <p>this is name!</p>
+            <p class="bg-warning text-danger">this is name!</p>
         </div>
         `;
     showMsg.html(str);

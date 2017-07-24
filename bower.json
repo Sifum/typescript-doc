@@ -1,19 +1,21 @@
 {
-  "name": "Minson",
-  "description": "this is Typescript",
-  "main": "./dist/main.js",
-  "authors": [
-    "Minson Chan"
-  ],
-  "license": "MIT",
-  "keywords": [
-    "node",
-    "typescipt"
-  ],
-  "moduleType": [],
-  "homepage": "None",
-  "private": true,
-  "dependencies": {
-    "bootstrap": "~3.3.7"
-  }
+    "name": "Minson",
+    "description": "this is Typescript",
+    "main": "./dist/main.js",
+    "authors": [
+        "Minson Chan"
+    ],
+    "license": "MIT",
+    "keywords": [
+        "node",
+        "typescipt"
+    ],
+    "moduleType": [],
+    "homepage": "None",
+    "private": true,
+    "dependencies": {
+        "bootstrap": "~3.3.7",
+        "font-awesome": "^4.7.0",
+        "jquery": "^3.2.1"
+    }
 }
