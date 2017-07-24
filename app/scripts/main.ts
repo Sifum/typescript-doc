@@ -1,6 +1,7 @@
 import * as $ from "jquery";
 import { StringValidator } from "./StringValidator";
 
+let showMsg = $("#showMsg");
 class Ss implements StringValidator {
     name: string;
 
@@ -43,3 +44,15 @@ if (ss.isAcceptable()) {
 } else {
     elem.html(config.author);
 }
+
+
+/**************测试*****************/
+function btnFunc() {
+    let str = `
+        <div>
+            <p>this is name!</p>
+        </div>
+        `;
+    showMsg.html(str);
+}
+$("#btn1").click(btnFunc);
